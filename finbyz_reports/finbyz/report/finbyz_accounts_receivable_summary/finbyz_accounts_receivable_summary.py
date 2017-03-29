@@ -6,10 +6,6 @@ import frappe
 from frappe import _
 from erpnext.accounts.report.accounts_receivable.accounts_receivable import ReceivablePayableReport
 
-def execute(filters=None):
-	columns, data = [], []
-	return columns, data
-
 class AccountsReceivableSummary(ReceivablePayableReport):
 	def run(self, args):
 		party_naming_by = frappe.db.get_value(args.get("naming_by")[0], None, args.get("naming_by")[1])
@@ -17,6 +13,8 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 	def get_columns(self, party_naming_by, args):
 		columns = [_(args.get("party_type")) + ":Link/" + args.get("party_type") + ":200"]
+
+		columns.append(_(args.get("sales_partner")) + ":Link/" + args.get("sales_partner") + ":200")
 
 		if party_naming_by == "Naming Series":
 			columns += [ args.get("party_type") + " Name::140"]
@@ -34,8 +32,6 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			columns += [_("Territory") + ":Link/Territory:80"]
 		if args.get("party_type") == "Supplier":
 			columns += [_("Supplier Type") + ":Link/Supplier Type:80"]
-		if args.get("party_type") == "Sales Partner":
-			columns += [_("Supplier Type") + ":Link/Sales Partner:80"]
 			
 		columns.append({
 			"fieldname": "currency",
@@ -53,7 +49,10 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		partywise_total = self.get_partywise_total(party_naming_by, args)
 
 		for party, party_dict in partywise_total.items():
+			for x in xrange(1,100):
+				print partywise_total.items()
 			row = [party]
+			row += [party]
 
 			if party_naming_by == "Naming Series":
 				row += [self.get_party_name(args.get("party_type"), party)]
@@ -96,6 +95,8 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 	def get_voucherwise_data(self, party_naming_by, args):
 		voucherwise_data = ReceivablePayableReport(self.filters).run(args)[1]
+		for x in xrange(1,10):
+			print voucherwise_data
 
 		cols = ["posting_date", "party"]
 
@@ -115,6 +116,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		if args.get("party_type") == "Customer":
 			cols += ["territory", "remarks"]
 
+
 		return self.make_data_dict(cols, voucherwise_data)
 
 	def make_data_dict(self, cols, data):
@@ -127,7 +129,34 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 def execute(filters=None):
 	args = {
 		"party_type": "Customer",
+		"sales_partner": "Sales Partner",
 		"naming_by": ["Selling Settings", "cust_master_name"],
 	}
 
 	return AccountsReceivableSummary(filters).run(args)
+
+# from __future__ import unicode_literals
+# import frappe
+
+# def execute(filters=None):
+# 	columns = [
+# 		{
+# 			'fieldname': 'creation_date',
+# 			'label': 'Date',
+# 			'fieldtype': 'Date'
+# 		},
+# 		{
+# 			'fieldname': 'mins',
+# 			'fieldtype': 'Float',
+# 			'label': 'Mins to First Response'
+# 		},
+# 	]
+
+# 	data = frappe.db.sql('''select date(creation) as creation_date,
+# 		avg(mins_to_first_response) as mins
+# 		from tabOpportunity
+# 			where date(creation) between %s and %s
+# 			and mins_to_first_response > 0
+# 		group by creation_date order by creation_date desc''', (filters.from_date, filters.to_date))
+
+# 	return columns, data
